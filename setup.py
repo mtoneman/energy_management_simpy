@@ -14,6 +14,7 @@ SQL_DIR   = f"{os.path.abspath(pathname)}/sql"
 conn = db.create_connection(f"{DATA_DIR}/energymanagement.db")
 
 tables = ["configuration"]
+scripts = ["table","alter","data"]
 
 def read_db_file(filename):
     try:
@@ -21,15 +22,11 @@ def read_db_file(filename):
             return f.read()
     except IOError:
         print(f"File {filename} not accessible")
+        return ""
 
 
 for table in tables:
     print(table)
-    db.executescript(conn,read_db_file(f"{SQL_DIR}/{table}_table.sql"))
-    db.delete(conn,f"delete from {table}",[])
-    db.executescript(conn,read_db_file(f"{SQL_DIR}/{table}_data.sql"))
+    for script in scripts:
+        db.executescript(conn,read_db_file(f"{SQL_DIR}/{table}_{script}.sql"))
 
-#file = open("sample.txt")
-#
-#line = file.read().replace("\n", " ")
-#file.close()
