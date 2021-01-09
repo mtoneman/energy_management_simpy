@@ -28,5 +28,5 @@ def read_db_file(filename):
 for table in tables:
     print(table)
     for script in scripts:
-        db.executescript(conn,read_db_file(f"{SQL_DIR}/{table}_{script}.sql"))
+        db.executescript(conn,read_db_file(f"{SQL_DIR}/setup/{table}_{script}.sql"))
 

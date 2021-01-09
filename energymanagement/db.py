@@ -1,5 +1,32 @@
+import os
 import sqlite3
 from sqlite3 import Error
+
+SQL_DIR = f"{os.path.dirname(os.path.realpath(__file__))}/../sql"
+
+def __read_query(queryname):
+    filename = SQL_DIR + "/" + queryname + ".sql"
+    try:
+        with open(filename) as f:
+            return f.read()
+    except IOError:
+        print(f"File {filename} not accessible")
+        return ""
+
+def resultset_to_dict(resultset):
+    result = {}
+    for row in resultset:
+        result[row[0]] = __type_guess(row[1])
+    return result
+
+def __type_guess(string):
+    try:
+        return int(string)
+    except ValueError:
+        try:
+            return float(string)
+        except ValueError:
+            return string
 
 
 def create_connection(db_file):
@@ -11,13 +38,14 @@ def create_connection(db_file):
     conn = None
     try:
         conn = sqlite3.connect(db_file)
+        conn.row_factory = sqlite3.Row
         return conn
     except Error as e:
         print(e)
 
     return conn
 
-def __run_query(conn, sql, qparams):
+def __run_query(conn, queryname, qparams):
     """
     Run a query which doesn't produce a resultset
     :param conn:
@@ -28,7 +56,7 @@ def __run_query(conn, sql, qparams):
 
     try:
         cur = conn.cursor()
-        cur.execute(sql, qparams)
+        cur.execute(__read_query(queryname), qparams)
         conn.commit()
         return cur.lastrowid
     except Error as e:
@@ -52,18 +80,18 @@ def executescript(conn, sql):
         print(e)
 
 
-def insert(conn, sql, qparams):
+def insert(conn, queryname, qparams):
     return __run_query(conn, sql, qparams)
 
-def update(conn, sql, qparams):
+def update(conn, queryname, qparams):
     return __run_query(conn, sql, qparams)
 
-def delete(conn, sql, qparams):
+def delete(conn, queryname, qparams):
     return __run_query(conn, sql, qparams)
 
 
 
-def select(conn, sql, qparams):
+def select(conn, queryname, qparams):
     """
     Run a query with a resultset
     :param conn:
@@ -73,15 +101,10 @@ def select(conn, sql, qparams):
     """
 
     try:
-        conn.row_factory = lite.Row
-
         cur = conn.cursor()
-        cur.execute(sql, qparams)
+        cur.execute(__read_query(queryname), qparams)
 
         rows = cur.fetchall()
-
-        for row in rows:
-            print(row)
 
         return rows
     except Error as e:

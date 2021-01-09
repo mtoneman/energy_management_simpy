@@ -9,19 +9,6 @@ def undefined_load(env, schedule, battery):
         battery.get(undefined_load_kWh[compliment]/4)
         yield env.timeout(15)
 
-
-def generate_freshwater(env, freshwater_tank, battery):
-    yield env.timeout(21) #small offset for prettier graph
-    while True:
-        yield env.timeout(30)
-        if freshwater_tank.level < 2000:
-            #print('starting a freshwater generation cycle at %.2f.' % (env.now))
-            while freshwater_tank.level < 9000:
-                freshwater_tank.put(1000) # 5Wh per liter
-                battery.get(5)
-                yield env.timeout(30)
-
-
 def laundry_cycle(env, battery, cycle_time):
     #print('starting a laundry cycle of %d minutes at %.2f.' % (cycle_time, env.now))
     yield env.timeout(cycle_time/2)
