@@ -34,7 +34,7 @@ def es(env, energy, start_time):
             solar.get(slevel)
 
 start_time, schedule = schedule.process(f"{DATA_DIR}/files/plan.csv")
-forecast = forecast.process(f"{DATA_DIR/files/forecast.csv", start_time)
+forecast = forecast.process(f"{DATA_DIR}/files/forecast.csv", start_time)
 
 env = simpy.Environment()
 
