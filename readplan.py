@@ -24,8 +24,10 @@ def es(env, energy, start_time):
     while True:
         reporting_cycle = 60
         yield env.timeout(reporting_cycle)
-        energy.append({"date": start_time + timedelta(minutes=env.now), "batterylevel": battery.level, "freshwaterlevel": freshwater_tank.level, "solarenergy": solar.level, 
-           "energylevel": ((battery.level/configuration['BATTERY_CAPACITY_KWH'])*9 + (freshwater_tank.level/configuration['FRESHWATER_CAPACITY_L']) *1)  * 100/10 })        
+        energy.append({"date": start_time + timedelta(minutes=env.now), "batterylevel": battery.level, 
+	   "freshwaterlevel": freshwater_tank.level, "solarenergy": solar.level, 
+           "energylevel": ((battery.level/configuration['BATTERY_CAPACITY_KWH'])*9 
+	       + (freshwater_tank.level/configuration['FRESHWATER_CAPACITY_L']) *1)  * 100/10 })        
         #print('\t Battery level at %d kWh at %d' %  (battery.level,env.now ))
         slevel = solar.level
         if slevel != 0:
