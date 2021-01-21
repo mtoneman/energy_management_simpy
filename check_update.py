@@ -13,6 +13,9 @@ DATA_DIR = f"{pathname}/data"
 # location of the SQL files
 SQL_DIR   = f"{pathname}/sql"
 
+tables = ["version","configuration"]
+scripts = ["table","alter","data"]
+
 def read_file(filename):
     """Read the file as a string"""
     """ read the specified filename to a string
@@ -29,19 +32,27 @@ def read_file(filename):
 try:
    SW_VERSION = int(read_file(pathname + "/VERSION.txt"))
 except ValueError:
-   sys.exit("Failure to get version from  VERSION.txt. Exiting...")
+   sys.exit("Failure to get version from VERSION.txt. Exiting...")
 
 conn = db.create_connection(f"{DATA_DIR}/energymanagement.db")
 
+# check if the DB already exists
 rows = db.select(conn,"select_version", [])
+if rows is not None:
+    DB_VERSION = rows[0]['version']
+    if DB_VERSION is None:
+        sys.exit(f"Failed to get a version from the database. Exiting...")
 
-if rows is None:
-   sys.exit(f"No database found, run setup.py first")
-
-DB_VERSION = rows[0]['version']
-print(f"DB VERSION = {DB_VERSION}, SW VERSION = {SW_VERSION}");
-
-for i in range(DB_VERSION, SW_VERSION):
-    print(f"Running changes_from_V{i}")
-    db.executescript(conn,read_file(f"{SQL_DIR}/changes/changes_from_V{i}.sql"))
+    print(f"DB VERSION = {DB_VERSION}, SW VERSION = {SW_VERSION}");
+ 
+    # apply the change scripts
+    for i in range(DB_VERSION, SW_VERSION):
+        print(f"Running changes_from_V{i}")
+        db.executescript(conn,read_file(f"{SQL_DIR}/changes/changes_from_V{i}.sql"))
+else:
+    for table in tables:
+        # loop over the tables DDL
+        for script in scripts:
+            # look for CREATE / ALTER / DATA files and apply to database
+            db.executescript(conn,read_file(f"{SQL_DIR}/setup/{table}_{script}.sql"))
 
