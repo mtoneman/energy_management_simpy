@@ -2,7 +2,9 @@ import os
 import sqlite3
 from sqlite3 import Error
 
-SQL_DIR = f"{os.path.dirname(os.path.realpath(__file__))}/../sql"
+pathname =os.path.dirname(os.path.realpath(__file__)) 
+
+SQL_DIR = f"{pathname}/../sql"
 
 def __read_query(queryname):
     filename = SQL_DIR + "/" + queryname + ".sql"

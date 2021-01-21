@@ -1,1 +1,1 @@
-SELECT * FROM configuratioN
+SELECT name,value FROM configuration

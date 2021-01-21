@@ -1,11 +1,13 @@
+#!/usr/bin/env python3
+
 import sys, os
 from datetime import datetime,timedelta
 from energymanagement import generators,consumers,freshwater,emutils,db
+from fileimport import forecast,schedule
 import simpy
 import csv
+import json
 import pandas as pd
-
-
 
 pathname = os.path.dirname(sys.argv[0])
 DATA_DIR = f"{os.path.abspath(pathname)}/data"
@@ -13,13 +15,9 @@ DATA_DIR = f"{os.path.abspath(pathname)}/data"
 conn = db.create_connection(f"{DATA_DIR}/energymanagement.db")
 configuration = db.resultset_to_dict(db.select(conn,"select_configuration", []))
 
-print(configuration)
+print (json.dumps(configuration, indent=2))
 
 RANDOM_SEED = 42
-start_time = 0
-
-schedule = []
-forecast = []
 energy = []
 
 def es(env, energy, start_time):
@@ -33,41 +31,8 @@ def es(env, energy, start_time):
         if slevel != 0:
             solar.get(slevel)
 
-with open('plan.csv', mode='r') as csv_file:
-    csv_reader = csv.DictReader(csv_file)
-    line_count = 0
-    for row in csv_reader:
-        if line_count == 0:
-            print(f'Column names are {", ".join(row)}')
-            line_count += 1
-        if line_count == 1:
-            start_time = datetime.fromisoformat(row["datetime"]);
-            print(f'\tstart time {start_time}')
-        #print(f'\tRow {line_count} at date {row["datetime"]}: {row["activity"]} at/to {row["destination_city"]},{row["destination_country"]}.')
-        row_time = datetime.fromisoformat(row["datetime"])
-        schedule_row = {"minutes":(row_time - start_time).total_seconds()/60,"compliment":row["compliment"],"activity":row["activity"],"destination_city":row["destination_city"],"destination_country":row["destination_country"]}
-        print(schedule_row)
-        schedule.append(schedule_row)
-        line_count += 1
-    print(f'Processed {line_count} lines.')
- 
-with open('forecast.csv', mode='r') as csv_file:
-    csv_reader = csv.DictReader(csv_file)
-    line_count = 0
-    format_str = '%m/%d/%Y %H:%M:%S' # the Date Time format
-    for row in csv_reader:
-        if line_count == 0:
-            print(f'Column names are {", ".join(row)}')
-            line_count += 1
-        row_time = datetime.strptime(row["Date time"], format_str)
-        #print((row_time - start_time).total_seconds()/60)
-        forecast_row = {"minutes":(row_time - start_time).total_seconds()/60,"location":row["Name"],"wind_direction":row["Wind Direction"],"solar_energy":row["Solar Energy"],"cloud_cover":row["Cloud Cover"],"wind_speed":row["Wind Speed"]}
-        print(forecast_row)
-        forecast.append(forecast_row)
-        line_count += 1
-    print(f'Processed {line_count} lines.')
-        
-       
+start_time, schedule = schedule.process('plan.csv')
+forecast = forecast.process('forecast.csv', start_time)
 
 env = simpy.Environment()
 
