@@ -12,7 +12,7 @@ import pandas as pd
 pathname = os.path.dirname(sys.argv[0])
 DATA_DIR = f"{os.path.abspath(pathname)}/data"
 
-conn = db.create_connection(f"{DATA_DIR}/energymanagement.db")
+conn = db.create_connection(f"{DATA_DIR}/db/energymanagement.db")
 configuration = db.resultset_to_dict(db.select(conn,"select_configuration", []))
 
 print (json.dumps(configuration, indent=2))
@@ -33,8 +33,8 @@ def es(env, energy, start_time):
         if slevel != 0:
             solar.get(slevel)
 
-start_time, schedule = schedule.process('plan.csv')
-forecast = forecast.process('forecast.csv', start_time)
+start_time, schedule = schedule.process(f"{DATA_DIR}/files/plan.csv")
+forecast = forecast.process(f"{DATA_DIR/files/forecast.csv", start_time)
 
 env = simpy.Environment()
 
@@ -59,6 +59,6 @@ env.process(freshwater.generate_freshwater(env, freshwater_tank, battery))
 
 env.run(until=configuration['SIM_TIME'])
 df = pd.DataFrame(energy)
-df.to_csv("energy.csv")
+df.to_csv(f"{DATA_DIR}/files/energy.csv")
 
 

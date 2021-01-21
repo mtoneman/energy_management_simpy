@@ -34,7 +34,7 @@ try:
 except ValueError:
    sys.exit("Failure to get version from VERSION.txt. Exiting...")
 
-conn = db.create_connection(f"{DATA_DIR}/energymanagement.db")
+conn = db.create_connection(f"{DATA_DIR}/db/energymanagement.db")
 
 # check if the DB already exists
 rows = db.select(conn,"select_version", [])

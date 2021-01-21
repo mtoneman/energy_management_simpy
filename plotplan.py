@@ -7,6 +7,8 @@ import dash_html_components as html
 import plotly.express as px
 import pandas as pd
 
+pathname = os.path.dirname(sys.argv[0])
+DATA_DIR = f"{os.path.abspath(pathname)}/data"
 
 app = dash.Dash('Hello World',
                 external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
@@ -40,7 +42,7 @@ app.layout = html.Div([
 
 @app.callback(Output('my-graph', 'figure'), [Input('my-dropdown', 'value'),Input('interval-component', 'n_intervals')])
 def update_graph(selected_dropdown_value, n_intervals):
-    df = pd.read_csv('energy.csv')
+    df = pd.read_csv(f"{DATA_DIR}/files/energy.csv")
 
     if(selected_dropdown_value == 'energylevel'):
         return {
