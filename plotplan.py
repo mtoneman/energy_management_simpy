@@ -17,7 +17,8 @@ app = dash.Dash('Hello World',
 config = { "energylevel": { "label": "Energy Level (%)", "range": [0,100]},
            "batterylevel": { "label": "Battery Level (kWh)", "range": [0,5000]},
            "freshwaterlevel": { "label": "Fresh Water Level (l)", "range": [0,10000]},
-           "solarenergy": { "label": "Solar Power Generated (kWh)", "range": [0,50]}
+           "solarenergy": { "label": "Solar Power Generated (kWh)", "range": [0,50]},
+           "windkiteenergy": { "label": "Wind Kite Power Generated (kWh)", "range": [0,300]}
 	 }
 
 app.layout = html.Div([
@@ -27,7 +28,8 @@ app.layout = html.Div([
             {'label': config['energylevel']['label'], 'value': 'energylevel'},
             {'label': config['batterylevel']['label'], 'value': 'batterylevel'},
             {'label': config['freshwaterlevel']['label'], 'value': 'freshwaterlevel'},
-            {'label': config['solarenergy']['label'], 'value': 'solarenergy'}
+            {'label': config['solarenergy']['label'], 'value': 'solarenergy'},
+            {'label': config['windkiteenergy']['label'], 'value': 'windkiteenergy'}
         ],
         value='energylevel'
     ),
@@ -91,7 +93,7 @@ def update_graph(selected_dropdown_value, n_intervals):
                          },
     	    }
         }
-    elif(selected_dropdown_value == 'solarenergy'):
+    elif(selected_dropdown_value == 'solarenergy' or selected_dropdown_value == 'windkiteenergy'):
         return {
             'data': [{
                 'x': df.date,

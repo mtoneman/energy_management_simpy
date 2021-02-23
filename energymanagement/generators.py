@@ -1,15 +1,23 @@
 from energymanagement import emutils
 
 
-def drag_egeneration(env, schedule, battery, BATTERY_CAPACITY_KWH):
+def drag_egeneration(env, schedule, start_time, battery, BATTERY_CAPACITY_KWH):
     """Simulate drag e-generation"""
     yield env.timeout(7) #small offset for prettier graph
-    power_generated_ph = 100
+    power_generated_ph = 150
     while True:
         yield env.timeout(60)
+        power_gen = power_generated_ph
+
         activity = schedule[emutils.row_at_time(env.now, schedule)]["activity"]
         if activity == 'sailing' and battery.level < (BATTERY_CAPACITY_KWH - power_generated_ph):
-            battery.put(power_generated_ph)
+            # daylight hours only
+            time_now = emutils.time_at_minute(env.now, start_time)
+            if(time_now.hour < 7 or time_now.hour > 19):
+                power_gen = 0
+
+            if(power_gen > 0):
+                battery.put(power_gen)
 
 
 def solar_egeneration(env, schedule, start_time, forecast, battery, BATTERY_CAPACITY_KWH, solar):
@@ -41,5 +49,38 @@ def solar_egeneration(env, schedule, start_time, forecast, battery, BATTERY_CAPA
             solar.put(power_gen)
 
         if power_gen > 0 and battery.level < (BATTERY_CAPACITY_KWH - power_gen):
-            #print('solar panels generated %f at %s' % (power_gen, time_now))
             battery.put(power_gen)
+            #print('solar panels generated %f at %s' % (power_gen, time_now))
+ 
+def windkite_egeneration(env, schedule, start_time, forecast, battery, BATTERY_CAPACITY_KWH, windkite):
+    """Simulate wind kite e-generation"""
+    yield env.timeout(2) #small offset for prettier graph
+
+    power_generated_ph = 200
+    while True:
+        yield env.timeout(60)
+        power_gen = power_generated_ph
+
+        activity = schedule[emutils.row_at_time(env.now, schedule)]["activity"]
+        if activity == 'anchoring' and battery.level < (BATTERY_CAPACITY_KWH - power_generated_ph):
+            # only for a few hours per day hours only
+            time_now = emutils.time_at_minute(env.now, start_time)
+            if(time_now.hour < 10 or time_now.hour > 16):
+                power_gen = 0
+
+            # factor in the forecast solar energy
+            wind_speed = float(forecast[emutils.row_at_time(env.now, forecast)]["wind_speed"])
+            # max / min wind speed for the kite
+            #print('wind speed for kite: %f' % (wind_speed))
+            if(wind_speed > 50 or  wind_speed < 8):
+                power_gen = 0
+
+            # wind power is wind speed cubed
+            power_gen = power_gen * (wind_speed*wind_speed)/(50.0*50)
+
+            if(power_gen > 0):
+                windkite.put(power_gen)
+
+            if power_gen > 0 and battery.level < (BATTERY_CAPACITY_KWH - power_gen):
+                battery.put(power_gen)
+

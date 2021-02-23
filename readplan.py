@@ -25,20 +25,26 @@ def es(env, energy, start_time):
         reporting_cycle = 60
         yield env.timeout(reporting_cycle)
         energy.append({"date": start_time + timedelta(minutes=env.now), "batterylevel": battery.level, 
-	   "freshwaterlevel": freshwater_tank.level, "solarenergy": solar.level, 
+	   "freshwaterlevel": freshwater_tank.level, "solarenergy": solar.level,"windkiteenergy": windkite.level, 
            "energylevel": ((battery.level/configuration['BATTERY_CAPACITY_KWH'])*9 
 	       + (freshwater_tank.level/configuration['FRESHWATER_CAPACITY_L']) *1)  * 100/10 })        
         #print('\t Battery level at %d kWh at %d' %  (battery.level,env.now ))
         slevel = solar.level
         if slevel != 0:
             solar.get(slevel)
+        wklevel = windkite.level
+        if wklevel != 0:
+            windkite.get(wklevel)
 
 start_time, schedule = schedule.process(f"{DATA_DIR}/files/plan.csv")
 forecast = forecast.process(f"{DATA_DIR}/files/forecast.csv", start_time)
 
 env = simpy.Environment()
 
+#we use containers to track energy and fluid levels of consumption / production and to log them
+
 solar = simpy.Container(env, 100000000, init=0)
+windkite = simpy.Container(env, 100000000, init=0)
 battery = simpy.Container(env, configuration['BATTERY_CAPACITY_KWH'], init=configuration['BATTERY_START_KWH'])
 freshwater_tank = simpy.Container(env, configuration['FRESHWATER_CAPACITY_L'], init=configuration['FRESHWATER_START_L'])
 
@@ -51,7 +57,8 @@ env.process(consumers.undefined_load(env, schedule, battery))
 
 #generators
 env.process(generators.solar_egeneration(env, schedule, start_time, forecast, battery, configuration['BATTERY_CAPACITY_KWH'], solar))
-env.process(generators.drag_egeneration(env, schedule, battery, configuration['BATTERY_CAPACITY_KWH']))
+env.process(generators.drag_egeneration(env, schedule, start_time, battery, configuration['BATTERY_CAPACITY_KWH']))
+env.process(generators.windkite_egeneration(env, schedule, start_time, forecast, battery, configuration['BATTERY_CAPACITY_KWH'], windkite))
 
 #freshwater
 env.process(freshwater.use_freshwater(env, schedule, start_time, freshwater_tank))
